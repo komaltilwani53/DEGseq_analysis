@@ -1,0 +1,55 @@
+setwd("C:/komalr")
+
+## load libraries
+library(DESeq2)
+library(tidyverse)
+
+
+
+# Get the data from GREIN
+1. Dataset we are using- GSE101770
+2.downloaud the count table and metadata
+3. read in R and prepare for DESeq2 analysis
+#read in counts data
+counts_data <- read.csv('GSE101770_GeneLevel_Raw_data.csv')
+head(counts_data)
+
+
+
+#Get the gene IDs as the raw names
+tidy_counts <- counts_data %>%
+select(-gene_symbol)%>%
+column_to_rownames(var = "X")
+colData <- data.frame(
+"sampleID" = colnames(tidy_counts),
+"condition" = c(rep("organoid",2),"cells",
+c(rep("organoid",2),"cells",
+c(rep("tissue",2),"cells"),
+row.names = colnames(tidy_counts)
+)
+
+view(colData)
+
+
+# read in METADATA
+colData <- read.csv('GSE101770_filtered_metadata.csv')
+
+colData <- data.frame(
+"sampleID" = colnames(tidy_counts),
+"condition" = c(rep("organoid",2),"cells",
+rep("organoid",2),"cells",
+rep("tissue",2),"cells"),
+row.names = colnames(tidy_counts)
+)
+
+
+# dds analysis
+rounded_counts <- apply(tidy_counts, MARGIN = 1:2 ,FUN = round)
+dds <- DESeqDataSetFromMatrix(countData = rounded_counts,
+colData = colData,
+design = ~ condition)
+
+#Plot data
+rld = rlog(dds)
+plotPCA(rld)
+
