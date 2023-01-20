@@ -1,1 +1,1 @@
-# DEGseq_analysis
+# DEseq2_analysis
