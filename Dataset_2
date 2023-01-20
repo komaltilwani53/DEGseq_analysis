@@ -5,11 +5,7 @@ counts <- read_csv('GSE52778_GeneLevel_Raw_data.csv')
 # Preliminaries
 library(tidyverse)
 library(DESeq2)
-#Read into R and prepare for DESeq2
-counts <- read_csv('GSE52778_GeneLevel_Raw_data.csv')
-View(counts)
-#Read into R and prepare for DESeq2
-counts <- read_csv('GSE52778_GeneLevel_Raw_data.csv')
+
 tidy_counts <- counts %>%
 select (-gene_symbol)%>%
 column_to_rownames(var = "X")
