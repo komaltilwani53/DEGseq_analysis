@@ -1,11 +1,17 @@
 # setwd("~/Desktop/komalr")
+
 # airway dataset
+
 #Read into R and prepare for DESeq2
 counts <- read_csv('GSE52778_GeneLevel_Raw_data.csv')
-# Preliminaries
+
+
+# load libraries
 library(tidyverse)
 library(DESeq2)
 
+
+#Get the gene IDs as the raw names
 tidy_counts <- counts %>%
 select (-gene_symbol)%>%
 column_to_rownames(var = "X")
