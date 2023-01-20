@@ -1,0 +1,116 @@
+# setwd("~/Desktop/komalr")
+# airway dataset
+#Read into R and prepare for DESeq2
+counts <- read_csv('GSE52778_GeneLevel_Raw_data.csv')
+# Preliminaries
+library(tidyverse)
+library(DESeq2)
+#Read into R and prepare for DESeq2
+counts <- read_csv('GSE52778_GeneLevel_Raw_data.csv')
+View(counts)
+#Read into R and prepare for DESeq2
+counts <- read_csv('GSE52778_GeneLevel_Raw_data.csv')
+tidy_counts <- counts %>%
+select (-gene_symbol)%>%
+column_to_rownames(var = "X")
+tidy_counts <- counts %>%
+select (-gene_symbol)%>%
+column_to_rownames(var = "x")
+
+
+# read in metadata
+colData <- read.csv('metadata.csv')
+View(colData)
+
+# We set up differentially expressed gene selection criterion here. 
+#pThr        <- 0.01   # for adj. p-value threshold (<= 0.01)
+#logFCThr    <- 1      # for log2 fold-change (at least 2 fold)
+#baseMeanThr <- 20     # for average expression level (at least 20 counts).
+#cpmThr      <- 1      # for copy-per-million (at least 1 cpm). 
+
+
+
+
+# Convert from decimals to integers
+rounded_counts <- apply(tidy_counts, MARGIN = 1:2, FUN = round)
+head(tidy_counts)
+colData <- data.frame(
+"sampleID" = colnames(tidy_counts),
+"condition" = c(rep("dexamethasone", 4), 'untreated',
+rep('Albuterol', 2), 'untreated'),
+row.names = colnames(tidy_counts)
+)
+
+dds <- DESeqDataSetFromMatrix(countData = rounded_counts,
+                              colData = colData,
+                              design = ~condition)
+dds
+
+# 2 method 
+#dds <- DESeqDataSetFromMatrix(
+  #countData = countmatrix,
+  #colData = coldata,
+  #design =  ~time+treatment)
+  
+# 3 method
+#dds <- DESeqDataSetFromMatrix(countData = counts,
+                             # colData = colData,
+                              #design = ~dexamethasone)
+
+
+# pre-filtering: removing rows with low gene counts
+# keeping rows that have at least 10 reads total
+keep <- rowSums(counts(dds)) >= 10
+dds <- dds[keep,]
+dds
+
+
+# set the factor level
+dds$condition <- relevel(dds$condition, ref = "untreated")
+
+
+# Perform differential gene expression analysis, and
+dds <- DESeq( dds )
+
+
+# get the result out.
+res <- results( dds )
+res
+# set the factor level
+dds$condition <- relevel(dds$dexamethasone,dds$Albuterol ref = "untreated")
+
+# set the factor level
+#dds$condition <- relevel(dds$dexamethasone, ref = "untreated")
+
+
+
+# Perform differential gene expression analysis, and
+dds <- DESeq( dds )
+
+
+# get the result out.
+res <- results( dds )
+res
+summary(res)
+res0.01 <- results(dds, alpha = 0.01)
+summary(res0.01)
+
+
+# contrasts
+resultsNames(dds)
+
+results(dds, contrast = c("condition","dexamethasone", "untreated"))
+# MA plot
+plotMA(res)
+
+
+# contrasts
+resultsNames(dds)
+res1 <-results(dds, contrast = c("condition","dexamethasone", "untreated"))
+# MA plot
+plotMA(res1)
+
+
+res2 <-results(dds, contrast = c("condition","Albuterol", "untreated"))
+# MA plot
+plotMA(res2)
