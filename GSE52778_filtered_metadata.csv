@@ -1,0 +1,17 @@
+"",characteristics,treatment,ercc_mix,cell line
+GSM1275862,N61311_untreated,Untreated,-,N61311
+GSM1275863,N61311_Dex,Dexamethasone,-,N61311
+GSM1275864,N61311_Alb,Albuterol,-,N61311
+GSM1275865,N61311_Alb_Dex,Albuterol_Dexamethasone,-,N61311
+GSM1275866,N052611_untreated,Untreated,-,N052611
+GSM1275867,N052611_Dex,Dexamethasone,1,N052611
+GSM1275868,N052611_Alb,Albuterol,1,N052611
+GSM1275869,N052611_Alb_Dex,Albuterol_Dexamethasone,1,N052611
+GSM1275870,N080611_untreated,Untreated,-,N080611
+GSM1275871,N080611_Dex,Dexamethasone,-,N080611
+GSM1275872,N080611_Alb,Albuterol,-,N080611
+GSM1275873,N080611_Alb_Dex,Albuterol_Dexamethasone,-,N080611
+GSM1275874,N061011_untreated,Untreated,1,N061011
+GSM1275875,N061011_Dex,Dexamethasone,1,N061011
+GSM1275876,N061011_Alb,Albuterol,1,N061011
+GSM1275877,N061011_Alb_Dex,Albuterol_Dexamethasone,1,N061011
