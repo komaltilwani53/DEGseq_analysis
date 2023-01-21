@@ -1,0 +1,115 @@
+##Dataset_3 and different ways of visualization
+
+
+###set working directory
+
+# Download  packages:
+BiocManager::install("EnhancedVolcano")
+BiocManager::install("recount")
+BiocManager::install("apeglm")
+BiocManager::install("EnsDb.Hsapiens.v86")
+BiocManager::install("clusterProfiler")
+BiocManager::install("recount")
+
+
+
+# Load libraries
+library(DESeq2)
+library(tidyverse)
+library(ggpubr)
+library(EnhancedVolcano)
+library(EnsDb.Hsapiens.v86)
+library(clusterProfiler)
+library(recount)
+
+
+###Read dataset which is download from recount2
+
+
+project_info <- abstract_search(query = "parkinson's disease")
+selected_study <- "SRP049203"
+
+# Download the study data
+download_study(selected_study)
+
+
+# Load the data
+load("SRP049203/rse_gene.Rdata")
+
+
+# Examine the read count matrix
+cts <- assay(rse_gene)
+View(cts)
+
+
+# Examine the sample metadata to see if it's ready for DESeq2 analysis
+cd <- as.data.frame(colData(rse_gene))
+View(cd)
+
+
+# Fix the colData to give a column with the appropriate groups
+rse_gene$condition <- c(rep("control", 4), rep("pd", 2),("control", 4), rep("pd", 4))
+
+
+# Do DESeq2 analysis
+# -- Make the dds
+dds <- DESeqDataSet(rse_gene, design = ~condition)
+
+
+# -- Get rlog
+rld <- rlog(dds)
+# -- plot PCA
+plotPCA(rld)
+# -- analyze
+dds <- DESeq(dds)
+# -- get results
+res <- results(dds, contrast = c("condition", "control", "pd"))
+# -- plotMA
+plotMA(res)
+
+
+
+# LFC shrink
+resNorm <- lfcShrink(dds = dds, res = res, type = "normal", coef = 2)
+# -- plotMA with resNorm
+plotMA(resNorm)
+
+view(resNorm)
+
+# Make a DF
+resdf <- as.data.frame(resNorm)
+View(resdf)
+
+
+# -- convert ENSG to gene symbol
+str(EnsDb.Hsapiens.v86)
+columns(EnsDb.Hsapiens.v86)
+keys(EnsDb.Hsapiens.v86)
+ens2sym <- AnnotationDbi::select(EnsDb.Hsapiens.v86, keys = keys(EnsDb.Hsapiens.v86),
+                                 columns = c("SYMBOL"))
+View(ens2sym)
+
+
+# -- wrangle the resdf and join with ens2sym map
+resdf <- resdf %>%
+  rownames_to_column() %>%
+  mutate(GENEID = gsub(rowname, pattern = "\\..+", replacement = "")) %>%
+  select(-rowname) %>%
+  inner_join(y = ens2sym, by = "GENEID")
+View(resdf)
+
+
+# -- volcano plot
+EnhancedVolcano(resdf, lab = resdf$SYMBOL, pCutoff = 1e-100,
+                FCcutoff = 3,
+                x = "log2FoldChange", y = "padj")
+
+
+# -- Get the over-expressed genes
+resdf %>%
+  filter(padj < .01 & log2FoldChange > 2) %>%
+  write_csv(file = "over_expressed_genes.csv")
+# Get the under-expressed genes
+resdf %>%
+  filter(padj < .01 & log2FoldChange < -2) %>%
+  write_csv(file = "under_expressed_genes.csv")
