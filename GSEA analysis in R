@@ -1,1 +1,78 @@
 
+## GSEA ##
+
+# Discrete cutoff -- or continuous distribution?
+EnhancedVolcano(resdf, lab = resdf$SYMBOL,
+                pCutoff = 1e-2,
+                FCcutoff = 2,
+                x = "log2FoldChange", y = "padj")
+
+# Adding a score for GSEA
+resdf2 <- resdf %>%
+  arrange(padj) %>%
+  mutate(gsea_metric = -log10(padj) * sign(log2FoldChange))
+
+# Deal with inf
+resdf2 <- resdf2 %>%
+  mutate(padj = case_when(padj == 0 ~ .Machine$double.xmin,
+                          TRUE ~ padj)) %>%
+  mutate(gsea_metric = -log10(padj) * sign(log2FoldChange))
+
+# Remove NAs and order by GSEA
+resdf2 <- resdf2 %>%
+  filter(! is.na(gsea_metric)) %>%
+  arrange(desc(gsea_metric))
+View(resdf2)
+
+# GSEA value histogram
+hist(resdf2$gsea_metric, breaks = 100)
+
+# Get the ranked GSEA vector
+ranks <- resdf2 %>%
+  select(SYMBOL, gsea_metric) %>%
+  distinct(SYMBOL, .keep_all = TRUE) %>%
+  deframe()
+
+# Run GSEA
+gseares <- GSEA(geneList = ranks, 
+                TERM2GENE = gene_sets)
+gsearesdf <- as.data.frame(gseares)
+View(gsearesdf)
+
+# Make summary plots
+dotplot(gseares)
+
+# Make GSEA plot for "GO_CELL_MATRIX_ADHESION"
+gseaplot(gseares, geneSetID = "GO_CELL_MATRIX_ADHESION",
+         title = "GO_CELL_MATRIX_ADHESION")
+
+# Make GSEA plot for "GO_RIBOSOMAL_SUBUNIT"
+gseaplot(gseares, geneSetID = "GO_RIBOSOMAL_SUBUNIT",
+         title = "GO_RIBOSOMAL_SUBUNIT")
+
+# Make GSEA plot for top and bottom results
+# -- Get top 4 over-expressed pathways
+top_pathways <- gsearesdf %>%
+  top_n(n = 4, wt = NES) %>%
+  pull(ID)
+# -- Make gseaplot for each and return as list
+top_pathway_plots <- lapply(top_pathways, function(pathway) {
+  gseaplot(gseares, geneSetID = pathway, title = pathway)
+})
+# -- Arrange with labels as a multi-panel plot
+top_pathway_plot <- ggarrange(plotlist = top_pathway_plots,
+                              ncol = 2, nrow = 2, labels = "AUTO")
+# -- Save it
+ggsave(top_pathway_plot, filename = "top_GSEA_up.png",
+       height = 11, width = 18)
+# -- Repeat steps with top 4 under-expressed pathways
+bottom_pathways <- gsearesdf %>%
+  top_n(n = 4, wt = -NES) %>%
+  pull(ID)
+bottom_pathway_plots <- lapply(bottom_pathways, function(pathway) {
+  gseaplot(gseares, geneSetID = pathway, title = pathway)
+})
+bottom_pathway_plot <- ggarrange(plotlist = bottom_pathway_plots,
+                                 ncol = 2, nrow = 2, labels = "AUTO")
+ggsave(bottom_pathway_plot, filename = "top_GSEA_down.png",
+       height = 11, width = 18)
